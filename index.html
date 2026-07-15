@@ -148,6 +148,9 @@ table.abs tbody tr:hover td:first-child{background:#f2f9ff}
 .rrow.tr{background:var(--blue-lt)}
 .rrow.tr .rl{font-weight:800;color:var(--text)}
 .rrow.tr .rv{color:var(--blue);font-size:14px}
+.rrow.paid{background:var(--green-lt)}
+.rrow.paid .rl{font-weight:800;color:#065f46}
+.rrow.paid .rv{color:var(--green);font-size:14px}
 
 .kb-card{background:var(--surface);border:1.5px solid #fecaca;border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);margin-bottom:20px}
 .kb-head{padding:13px 18px;background:linear-gradient(135deg,#fff5f5,#fff);border-bottom:1.5px solid #fecaca;font-weight:800;font-size:13px;color:var(--red);display:flex;align-items:center;gap:7px}
@@ -212,6 +215,10 @@ footer{text-align:center;padding:20px;color:var(--text-muted);font-size:10px;fon
 .del-btn{padding:3px 8px;border:1px solid #fecaca;background:#fff5f5;color:var(--red);border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;transition:all .15s}
 .del-btn:hover{background:var(--red);color:#fff}
 
+.kar-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.kar-row:last-child{border-bottom:none}
+.kar-left{display:flex;align-items:center;gap:10px}
+
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:var(--bg2)}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
@@ -240,6 +247,7 @@ footer{text-align:center;padding:20px;color:var(--text-muted);font-size:10px;fon
   <button class="ntab active" onclick="showPage('dashboard',this)">📊 Dashboard</button>
   <button class="ntab" onclick="showPage('input',this)">➕ Input Data</button>
   <button class="ntab" onclick="showPage('absensi',this)">📋 Absensi</button>
+  <button class="ntab" onclick="showPage('karyawan',this)">👥 Karyawan</button>
   <button class="ntab" onclick="showPage('rekap',this)">💰 Rekap Gaji</button>
   <button class="ntab" onclick="showPage('kg',this)">⚖️ Data KG</button>
   <button class="ntab" onclick="showPage('pengeluaran',this)">💸 Pengeluaran</button>
@@ -289,7 +297,7 @@ footer{text-align:center;padding:20px;color:var(--text-muted);font-size:10px;fon
         <span class="saved-indicator" id="saved-ind">✅ Tersimpan</span>
       </div>
       <div class="input-grid">
-        <div class="input-field"><label class="input-label">⚖️ Total KG</label><input class="input-box" type="number" id="in-total-kg" placeholder="cth: 1500" min="0"></div>
+        <div class="input-field"><label class="input-label">⚖️ Total KG</label><input class="input-box" type="number" id="in-total-kg" placeholder="cth: 1500" min="0" step="0.1"></div>
         <div class="input-field"><label class="input-label">🧺 Total Buah</label><input class="input-box" type="number" id="in-total-buah" placeholder="cth: 250" min="0"></div>
         <div class="input-field"><label class="input-label">🧾 Transaksi KG</label><input class="input-box" type="number" id="in-trx-kg" placeholder="cth: 120" min="0"></div>
         <div class="input-field"><label class="input-label">🧾 Transaksi Buah</label><input class="input-box" type="number" id="in-trx-buah" placeholder="cth: 80" min="0"></div>
@@ -342,7 +350,8 @@ footer{text-align:center;padding:20px;color:var(--text-muted);font-size:10px;fon
       <div class="ea"><button class="btn btn-p" onclick="addNewMonth()">➕ Tambah Bulan</button></div>
       <div style="margin-top:16px;font-size:11px;color:var(--text-muted);line-height:1.7">
         💡 <b>Tips:</b> Setelah menambah bulan baru, pilih bulannya di bagian atas untuk mengisi data.<br>
-        Karyawan dipisah dengan koma, cth: <code style="background:var(--bg2);padding:1px 5px;border-radius:4px;font-family:monospace">Adna,Putri,Yosie,Munika</code>
+        Karyawan dipisah dengan koma, cth: <code style="background:var(--bg2);padding:1px 5px;border-radius:4px;font-family:monospace">Adna,Putri,Yosie,Munika</code><br>
+        Untuk tambah/hapus karyawan di bulan yang <b>sudah ada</b>, gunakan tab <b>👥 Karyawan</b>.
       </div>
     </div>
   </div>
@@ -390,13 +399,45 @@ footer{text-align:center;padding:20px;color:var(--text-muted);font-size:10px;fon
   <div class="card" style="margin-bottom:20px">
     <div class="abs-scroll"><table class="abs"><thead><tr id="abs-header"></tr></thead><tbody id="abs-body"></tbody></table></div>
   </div>
+
+  <div class="stitle">📊 Ringkasan Shift Bulan Ini <span class="sub">— otomatis dipakai untuk hitung gaji</span></div>
+  <div class="card" style="margin-bottom:20px">
+    <div class="tbl-wrap">
+      <table class="dt" id="abs-summary-table">
+        <thead><tr><th>Karyawan</th><th>Shift 1</th><th>Shift 2</th><th>Shift 3</th><th>Longshift</th><th>Middleshift</th><th>Halfshift</th><th>Libur</th><th>Absen</th><th>Total Hari Kerja</th></tr></thead>
+        <tbody id="abs-summary-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-karyawan">
+  <div class="month-bar"><label>📅 Bulan:</label><select class="msel" id="kar-month-sel" onchange="renderKaryawan()"></select></div>
+  <div class="stitle">👥 Kelola Karyawan <span class="sub">— tambah atau hapus karyawan aktif untuk bulan ini</span></div>
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-header">Karyawan Aktif</div>
+    <div id="kar-list" style="padding:6px 18px"></div>
+  </div>
+  <div class="card">
+    <div class="card-header">➕ Tambah Karyawan Baru</div>
+    <div style="padding:18px;display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+      <div class="input-field" style="flex:1;min-width:200px">
+        <label class="input-label">Nama Karyawan</label>
+        <input class="input-box" type="text" id="kar-new-name" placeholder="cth: Sari">
+      </div>
+      <button class="btn btn-p" onclick="addKaryawan()">➕ Tambah ke Bulan Ini</button>
+    </div>
+    <div style="padding:0 18px 18px;font-size:11px;color:var(--text-muted);line-height:1.6">
+      💡 Perubahan hanya berlaku untuk bulan yang dipilih di atas. Kalau karyawan ini juga aktif di bulan-bulan berikutnya, tambahkan juga di bulan tersebut.
+    </div>
+  </div>
 </div>
 
 <div class="page" id="page-rekap">
   <div class="month-bar"><label>📅 Bulan:</label><select class="msel" id="rek-month-sel" onchange="renderRekap()"></select></div>
   <div class="stitle" id="rek-title">Rekap Gaji <span class="sub"></span></div>
   <div class="rekap-grid" id="rek-grid"></div>
-  <div class="kb-card" id="kb-section"><div class="kb-head">⚠️ Kasbon Bulan Ini</div><div id="kb-rows"></div></div>
+  <div class="kb-card" id="kb-section"><div class="kb-head">⚠️ Ringkasan Kasbon Bulan Ini</div><div id="kb-rows"></div></div>
 </div>
 
 <div class="page" id="page-kg">
@@ -435,23 +476,6 @@ footer{text-align:center;padding:20px;color:var(--text-muted);font-size:10px;fon
         </tbody>
       </table>
     </div>
-  </div>
-  <div class="card">
-    <div class="card-header">👤 Riwayat Karyawan</div>
-    <table class="info-table">
-      <thead><tr><th>Nama</th><th>Periode Aktif</th><th>Catatan</th></tr></thead>
-      <tbody>
-        <tr><td style="font-weight:700">Adna</td><td class="mono">Jan 2025 – sekarang</td><td>Karyawan tetap</td></tr>
-        <tr><td style="font-weight:700">Putri</td><td class="mono">Jan 2025 – sekarang</td><td>Karyawan tetap</td></tr>
-        <tr><td style="font-weight:700">Opi</td><td class="mono">Jan – Apr 2025</td><td>Sudah tidak aktif</td></tr>
-        <tr><td style="font-weight:700">Ria / Icha</td><td class="mono">Feb – Mar 2025</td><td>Sudah tidak aktif</td></tr>
-        <tr><td style="font-weight:700">Ayu</td><td class="mono">Mei – Jun 2025</td><td>Sudah tidak aktif</td></tr>
-        <tr><td style="font-weight:700">Dewi</td><td class="mono">Jul 2025 – Jan 2026</td><td>Sudah tidak aktif</td></tr>
-        <tr><td style="font-weight:700">Yosie</td><td class="mono">Des 2025 – sekarang</td><td>Tarif khusus (Gaji 1.8)</td></tr>
-        <tr><td style="font-weight:700">Munika</td><td class="mono">Apr 2026 – sekarang</td><td>Karyawan baru</td></tr>
-        <tr><td style="font-weight:700">Yanse</td><td class="mono">Mar 2026</td><td>Sementara</td></tr>
-      </tbody>
-    </table>
   </div>
 </div>
 
@@ -688,13 +712,13 @@ const SEED_OP_DATA = {
   may26:{totalKg:0,totalBuah:0,trxKg:0,trxBuah:0,konsBaru:0,konsLama:0},
 };
 const SEED_ABSENSI = {};
-const KASBON = {};
 
 let MONTHS = [];
 let EMP_PER_MONTH = {};
 let OP_DATA = {};
 let ABSENSI = {};
 let PENGELUARAN = [];
+let KASBON_DATA = {};
 let pengId = 1;
 let currentInputMonth = null;
 
@@ -702,11 +726,13 @@ const DAYS_OF_WEEK = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const WE = ['Sat','Sun'];
 function getDayName(year, month, day) { return DAYS_OF_WEEK[new Date(year, month-1, day).getDay()]; }
 
-const EMP_COLOR = {
-  Adna:'#1a7fd4', Putri:'#7c3aed', Yosie:'#16a34a', Munika:'#ea580c',
-  Dewi:'#0891b2', Ayu:'#d97706', Opi:'#9333ea', Eria:'#db2777',
-  Ria:'#0d9488', Icha:'#65a30d', Yanse:'#64748b'
-};
+const EMP_COLOR_LIST = ['#1a7fd4','#7c3aed','#16a34a','#ea580c','#0891b2','#d97706','#9333ea','#db2777','#0d9488','#65a30d','#64748b','#c026d3'];
+function colorFor(name) {
+  let h=0; for (let i=0;i<name.length;i++) h = (h*31 + name.charCodeAt(i)) >>> 0;
+  return EMP_COLOR_LIST[h % EMP_COLOR_LIST.length];
+}
+const EMP_COLOR = new Proxy({}, { get: (t,name)=> colorFor(String(name)) });
+
 const SL = {s1:'S1',s2:'S2',s3:'S3',sl:'LS',sm:'MS',sh:'HS',sx:'LB',sa:'AB','':''};
 const SN = {s1:'Shift 1',s2:'Shift 2',s3:'Shift 3',sl:'Longshift',sm:'Middleshift',sh:'Halfshift',sx:'Libur',sa:'Absen','':'Kosong'};
 const GAJI_NEW = {s1:69300,s2:69300,s3:69300,sl:92400,sm:77000,sh:34650,sx:0,sa:0,'':0};
@@ -724,7 +750,7 @@ async function loadMonths() {
   }
   MONTHS = rows.map(r=>({key:r.key,label:r.label,year:r.year,month:r.month,days:r.days})).sort((a,b)=> a.year!==b.year ? a.year-b.year : a.month-b.month);
   EMP_PER_MONTH = {};
-  rows.forEach(r=>{ EMP_PER_MONTH[r.key] = r.employees ? r.employees.split(',').filter(Boolean) : []; });
+  rows.forEach(r=>{ EMP_PER_MONTH[r.key] = r.employees ? r.employees.split(',').map(s=>s.trim()).filter(Boolean) : []; });
 }
 async function loadOpData() {
   let rows = await sbSelect('op_data');
@@ -738,16 +764,6 @@ async function loadOpData() {
 }
 async function loadAbsensi() {
   let rows = await sbSelect('absensi');
-  if (!rows.length) {
-    const seedRows = [];
-    Object.entries(SEED_ABSENSI).forEach(([mkey,emps])=>{
-      Object.entries(emps).forEach(([emp,days])=>{
-        Object.entries(days).forEach(([day,shift])=>{ seedRows.push({ month_key:mkey, employee:emp, day:+day, shift }); });
-      });
-    });
-    if (seedRows.length) await sbUpsert('absensi', seedRows, 'month_key,employee,day');
-    rows = seedRows;
-  }
   ABSENSI = {};
   rows.forEach(r=>{
     if (!ABSENSI[r.month_key]) ABSENSI[r.month_key]={};
@@ -760,6 +776,14 @@ async function loadPengeluaran() {
   PENGELUARAN = rows.map(r=>({ id:r.id, date:r.date, monthKey:r.month_key, cat:r.category, desc:r.description, amount:r.amount, via:r.via }));
   pengId = rows.length ? Math.max(...rows.map(r=>r.id))+1 : 1;
 }
+async function loadKasbon() {
+  const rows = await sbSelect('kasbon');
+  KASBON_DATA = {};
+  rows.forEach(r=>{
+    if (!KASBON_DATA[r.month_key]) KASBON_DATA[r.month_key] = {};
+    KASBON_DATA[r.month_key][r.employee] = r.amount || 0;
+  });
+}
 
 // ═══════════════════════════════════════════════════════
 // INIT
@@ -767,20 +791,19 @@ async function loadPengeluaran() {
 async function init() {
   showToast('⏳ Memuat data dari database...');
   try {
-    await Promise.all([loadMonths(), loadOpData(), loadAbsensi(), loadPengeluaran()]);
+    await Promise.all([loadMonths(), loadOpData(), loadAbsensi(), loadPengeluaran(), loadKasbon()]);
   } catch(e) {
     console.error(e);
     showToast('⚠️ Gagal memuat sebagian data. Cek koneksi.');
   }
   if (!MONTHS.length) {
-    // fallback total: kalau database sama sekali tak terjangkau, pakai data bawaan biar dashboard tetap terbuka
     MONTHS = SEED_MONTHS.slice();
     EMP_PER_MONTH = Object.assign({}, SEED_EMP_PER_MONTH);
     OP_DATA = JSON.parse(JSON.stringify(SEED_OP_DATA));
     showToast('⚠️ Mode offline — perubahan tidak akan tersimpan ke database');
   }
 
-  ['abs-month-sel','rek-month-sel','kg-month-sel'].forEach(id => {
+  ['abs-month-sel','rek-month-sel','kg-month-sel','kar-month-sel'].forEach(id => {
     const sel = document.getElementById(id);
     sel.innerHTML = '';
     MONTHS.forEach(m => {
@@ -797,6 +820,7 @@ async function init() {
 
   renderDashboard();
   renderAbsensi();
+  renderKaryawan();
   renderRekap();
   renderKG();
 
@@ -842,6 +866,7 @@ function renderDashboard() {
   for (let i=MONTHS.length-1;i>=0;i--) {
     if ((OP_DATA[MONTHS[i].key]||{}).totalKg > 0) { latestKg = OP_DATA[MONTHS[i].key].totalKg; latestLabel = MONTHS[i].label; break; }
   }
+  const lastEmps = MONTHS.length ? (EMP_PER_MONTH[MONTHS[MONTHS.length-1].key]||[]) : [];
 
   document.getElementById('kpi-cards').innerHTML = `
     <div class="scard c-blue"><div class="scard-icon">⚖️</div><div class="scard-label">Total KG (All Time)</div><div class="scard-value">${fmtNum(totalKgAll)}</div><div class="scard-sub">dari ${MONTHS.length} bulan data</div></div>
@@ -849,7 +874,7 @@ function renderDashboard() {
     <div class="scard c-orange"><div class="scard-icon">🆕</div><div class="scard-label">Konsumen Baru</div><div class="scard-value">${fmtNum(allBaru)}</div><div class="scard-sub">total akuisisi baru</div></div>
     <div class="scard c-purple"><div class="scard-icon">🔄</div><div class="scard-label">Konsumen Lama</div><div class="scard-value">${fmtNum(allLama)}</div><div class="scard-sub">total transaksi repeat</div></div>
     <div class="scard c-teal"><div class="scard-icon">📅</div><div class="scard-label">KG Bulan Terakhir</div><div class="scard-value">${fmtNum(latestKg)}</div><div class="scard-sub">${latestLabel}</div></div>
-    <div class="scard c-red"><div class="scard-icon">👥</div><div class="scard-label">Active Employees</div><div class="scard-value">${MONTHS.length ? (EMP_PER_MONTH[MONTHS[MONTHS.length-1].key]||[]).length : 0}</div><div class="scard-sub">${MONTHS.length ? (EMP_PER_MONTH[MONTHS[MONTHS.length-1].key]||[]).join(' · ') : '—'}</div></div>
+    <div class="scard c-red"><div class="scard-icon">👥</div><div class="scard-label">Active Employees</div><div class="scard-value">${lastEmps.length}</div><div class="scard-sub">${lastEmps.join(' · ')||'—'}</div></div>
   `;
   document.getElementById('kg-total-label').textContent = 'Total: ' + fmtNum(totalKgAll) + ' kg';
 
@@ -980,6 +1005,21 @@ function renderAbsensi() {
     tbody.appendChild(tr);
   });
   if (selCell) { selCell.style.outline=''; selCell=null; }
+  renderAbsSummary(key);
+}
+
+function renderAbsSummary(key) {
+  const emps = EMP_PER_MONTH[key]||[];
+  const absData = ABSENSI[key]||{};
+  const body = document.getElementById('abs-summary-body');
+  if (!emps.length) { body.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--text-muted);font-size:12px;padding:16px">Belum ada karyawan di bulan ini</td></tr>'; return; }
+  body.innerHTML = emps.map(emp=>{
+    const d = absData[emp]||{};
+    let c = {s1:0,s2:0,s3:0,sl:0,sm:0,sh:0,sx:0,sa:0};
+    Object.values(d).forEach(v=>{ if(c[v]!==undefined) c[v]++; });
+    const totalKerja = c.s1+c.s2+c.s3+c.sl+c.sm+c.sh;
+    return `<tr><td style="font-weight:700">${emp}</td><td class="mono">${c.s1||'-'}</td><td class="mono">${c.s2||'-'}</td><td class="mono">${c.s3||'-'}</td><td class="mono">${c.sl||'-'}</td><td class="mono">${c.sm||'-'}</td><td class="mono">${c.sh||'-'}</td><td class="mono" style="color:var(--red)">${c.sx||'-'}</td><td class="mono" style="color:var(--text-muted)">${c.sa||'-'}</td><td class="mono" style="color:var(--blue);font-weight:700">${totalKerja}</td></tr>`;
+  }).join('');
 }
 
 function quickEdit(emp, day, mkey, tdEl) {
@@ -1008,6 +1048,7 @@ async function applyEdit() {
   if (selCell) { selCell.style.outline=''; selCell=null; }
   const ok = await sbUpsert('absensi', [{ month_key:key, employee:emp, day:day, shift:code }], 'month_key,employee,day');
   showToast(ok ? `✅ ${emp} tgl ${day}: ${SN[code]||'Kosong'} tersimpan!` : '⚠️ Gagal simpan ke database');
+  renderAbsSummary(key);
   renderRekap();
 }
 
@@ -1022,7 +1063,54 @@ async function resetCell() {
   if (selCell) { selCell.style.outline=''; selCell=null; }
   await sbUpsert('absensi', [{ month_key:key, employee:emp, day:day, shift:'' }], 'month_key,employee,day');
   showToast(`🔄 ${emp} tgl ${day} dikosongkan`);
+  renderAbsSummary(key);
   renderRekap();
+}
+
+// ═══════════════════════════════════════════════════════
+// KELOLA KARYAWAN
+// ═══════════════════════════════════════════════════════
+function renderKaryawan() {
+  const sel = document.getElementById('kar-month-sel');
+  if (!sel) return;
+  const key = sel.value;
+  const emps = EMP_PER_MONTH[key] || [];
+  const list = document.getElementById('kar-list');
+  if (!emps.length) { list.innerHTML = '<div style="padding:14px 0;color:var(--text-muted);font-size:12px">Belum ada karyawan di bulan ini</div>'; return; }
+  list.innerHTML = emps.map(emp => {
+    const color = colorFor(emp);
+    return `<div class="kar-row">
+      <div class="kar-left"><div class="av" style="background:${color};width:30px;height:30px;font-size:12px">${emp[0]}</div><span style="font-weight:700;font-size:13px">${emp}</span></div>
+      <button class="del-btn" onclick="removeKaryawan('${emp.replace(/'/g,"\\'")}')">🗑️ Hapus</button>
+    </div>`;
+  }).join('');
+}
+
+async function addKaryawan() {
+  const sel = document.getElementById('kar-month-sel');
+  const key = sel.value;
+  const name = document.getElementById('kar-new-name').value.trim();
+  if (!name) { showToast('⚠️ Isi nama karyawan dulu'); return; }
+  const emps = EMP_PER_MONTH[key] || [];
+  if (emps.some(e=>e.toLowerCase()===name.toLowerCase())) { showToast('⚠️ Karyawan sudah ada di bulan ini'); return; }
+  emps.push(name);
+  EMP_PER_MONTH[key] = emps;
+  document.getElementById('kar-new-name').value = '';
+  renderKaryawan(); renderAbsensi(); renderRekap();
+  const mInfo = MONTHS.find(m=>m.key===key);
+  const ok = await sbUpsert('months', [{ key, label: mInfo.label, year: mInfo.year, month: mInfo.month, days: mInfo.days, employees: emps.join(',') }], 'key');
+  showToast(ok ? '✅ ' + name + ' ditambahkan ke ' + mInfo.label + '!' : '⚠️ Gagal sync ke database');
+}
+
+async function removeKaryawan(name) {
+  const sel = document.getElementById('kar-month-sel');
+  const key = sel.value;
+  const emps = (EMP_PER_MONTH[key]||[]).filter(e=>e!==name);
+  EMP_PER_MONTH[key] = emps;
+  renderKaryawan(); renderAbsensi(); renderRekap();
+  const mInfo = MONTHS.find(m=>m.key===key);
+  const ok = await sbUpsert('months', [{ key, label: mInfo.label, year: mInfo.year, month: mInfo.month, days: mInfo.days, employees: emps.join(',') }], 'key');
+  showToast(ok ? '🗑️ ' + name + ' dihapus dari ' + mInfo.label : '⚠️ Gagal sync ke database');
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1037,22 +1125,34 @@ function renderRekap() {
   const absData = ABSENSI[key]||{};
   const isOld = (mInfo.year===2025 && mInfo.month<8);
   const GAJI = isOld ? GAJI_OLD : GAJI_NEW;
-  const kasbonData = KASBON[key]||{};
+  const kasbonMonth = KASBON_DATA[key]||{};
 
   const grid = document.getElementById('rek-grid');
   grid.innerHTML = '';
+  let grandTotalKasbon = 0;
   emps.forEach(emp => {
-    const color = EMP_COLOR[emp]||'#64748b';
+    const color = colorFor(emp);
     const empAbs = absData[emp]||{};
     let counts={}, total=0;
     Object.values(empAbs).forEach(v => { if (!v) return; counts[v]=(counts[v]||0)+1; total+=(GAJI[v]||0); });
-    const kasbon = kasbonData[emp];
+    const kasbonAmt = kasbonMonth[emp] || 0;
+    grandTotalKasbon += kasbonAmt;
     const netStr = total ? 'Rp '+total.toLocaleString('id') : 'Data belum diisi';
     const nc = total>0?'pos':'zero';
+    const diterima = Math.max(total - kasbonAmt, 0);
+
     let shiftRows = ['s1','s2','s3','sl','sm','sh'].filter(k=>counts[k]).map(k=>`<div class="rrow"><span class="rl"><span class="sb ${k}">${SL[k]}</span>${SN[k]} × ${counts[k]} hr</span><span class="rv">Rp ${((counts[k])*(GAJI[k]||0)).toLocaleString('id')}</span></div>`).join('');
     if (counts['sx']) shiftRows += `<div class="rrow"><span class="rl"><span class="sb sx">LB</span>Libur × ${counts['sx']} hr</span><span class="rv" style="color:var(--text-muted)">—</span></div>`;
-    if (kasbon) shiftRows += `<div class="rrow"><span class="rl">⚠️ Kasbon</span><span class="rv" style="color:var(--red)">${kasbon}</span></div>`;
     shiftRows += `<div class="rrow tr"><span class="rl">💰 Total Gaji Bersih</span><span class="rv">${netStr}</span></div>`;
+    shiftRows += `<div class="rrow" style="align-items:center">
+      <span class="rl">💳 Kasbon Bulan Ini</span>
+      <span style="display:flex;gap:6px;align-items:center">
+        <input type="number" class="input-box" style="width:110px;padding:4px 8px;font-size:11px" id="kasbon-input-${key}-${emp}" value="${kasbonAmt||''}" placeholder="0" min="0">
+        <button class="btn btn-s" style="padding:4px 10px;font-size:10px" onclick="saveKasbon('${key}','${emp.replace(/'/g,"\\'")}')">💾</button>
+      </span>
+    </div>`;
+    shiftRows += `<div class="rrow paid"><span class="rl">✅ Gaji Diterima</span><span class="rv">Rp ${diterima.toLocaleString('id')}</span></div>`;
+
     const card = document.createElement('div');
     card.className = 'rcard';
     card.innerHTML = `<div class="rcard-head" style="background:linear-gradient(135deg,${color}14,#fff)"><div class="rcard-name"><div class="av" style="background:${color}">${emp[0]}</div>${emp}</div><div class="rtot ${nc}">${netStr}</div></div>${shiftRows}`;
@@ -1060,14 +1160,25 @@ function renderRekap() {
   });
 
   const kbRows = document.getElementById('kb-rows');
-  kbRows.innerHTML = '';
-  if (Object.keys(kasbonData).length === 0) {
+  const entries = emps.filter(emp => (kasbonMonth[emp]||0) > 0);
+  if (!entries.length) {
     kbRows.innerHTML = '<div class="kb-row" style="color:var(--text-muted);font-size:12px">Tidak ada kasbon bulan ini</div>';
   } else {
-    Object.entries(kasbonData).forEach(([emp,note])=>{
-      kbRows.innerHTML += `<div class="kb-row"><div><div class="kb-name"><div class="av" style="background:${EMP_COLOR[emp]||'#64748b'};width:26px;height:26px;font-size:11px">${emp[0]}</div>${emp}</div><div class="kb-info">${note}</div></div><div class="kb-amt">Ada kasbon</div></div>`;
-    });
+    kbRows.innerHTML = entries.map(emp=>{
+      const color = colorFor(emp);
+      return `<div class="kb-row"><div class="kb-name"><div class="av" style="background:${color};width:26px;height:26px;font-size:11px">${emp[0]}</div>${emp}</div><div class="kb-amt">Rp ${(kasbonMonth[emp]).toLocaleString('id')}</div></div>`;
+    }).join('') + `<div class="kb-row" style="background:var(--red-lt)"><div class="kb-name">💯 Total Kasbon</div><div class="kb-amt">Rp ${grandTotalKasbon.toLocaleString('id')}</div></div>`;
   }
+}
+
+async function saveKasbon(key, emp) {
+  const input = document.getElementById(`kasbon-input-${key}-${emp}`);
+  const amount = +input.value || 0;
+  if (!KASBON_DATA[key]) KASBON_DATA[key] = {};
+  KASBON_DATA[key][emp] = amount;
+  renderRekap();
+  const ok = await sbUpsert('kasbon', [{ month_key:key, employee:emp, amount, note:'' }], 'month_key,employee');
+  showToast(ok ? '✅ Kasbon ' + emp + ' tersimpan!' : '⚠️ Gagal simpan kasbon (pastikan tabel "kasbon" sudah dibuat di Supabase)');
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1118,7 +1229,7 @@ async function addNewMonth() {
 
   if (MONTHS.find(m => m.key === key)) { showToast('⚠️ Bulan ' + label + ' sudah ada!'); return; }
 
-  const emps = empsRaw ? empsRaw.split(',').map(e=>e.trim()).filter(Boolean) : ['Adna','Putri','Yosie','Munika'];
+  const emps = empsRaw ? empsRaw.split(',').map(e=>e.trim()).filter(Boolean) : [];
 
   MONTHS.push({ key, label, year, month: monthNum, days });
   OP_DATA[key] = { totalKg:0, totalBuah:0, trxKg:0, trxBuah:0, konsBaru:0, konsLama:0 };
@@ -1137,7 +1248,7 @@ async function addNewMonth() {
 }
 
 function refreshAllSelects() {
-  ['abs-month-sel','rek-month-sel','kg-month-sel'].forEach(id => {
+  ['abs-month-sel','rek-month-sel','kg-month-sel','kar-month-sel'].forEach(id => {
     const sel = document.getElementById(id);
     const cur = sel.value;
     sel.innerHTML = '';
